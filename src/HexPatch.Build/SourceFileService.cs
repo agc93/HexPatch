@@ -3,11 +3,11 @@ using System.IO;
 using System.Linq;
 
 namespace HexPatch.Build {
-    public class GameFileService
+    public class SourceFileService
     {
-        private readonly PatchBuildOptions _opts;
+        private readonly SourceFileOptions _opts;
         private readonly List<DirectoryInfo> _sources;
-        public GameFileService(PatchBuildOptions buildOpts) {
+        public SourceFileService(SourceFileOptions buildOpts) {
             _opts = buildOpts;
             _sources = new List<DirectoryInfo>();
             foreach (var fileSource in _opts.FileSources.Where(Directory.Exists)) {

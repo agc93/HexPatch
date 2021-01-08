@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\HexPatch.Build\HexPatch.Build.csproj" />
     <ProjectReference Include="..\HexPatch\HexPatch.csproj" />
   </ItemGroup>
 

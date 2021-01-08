@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HexPatch.Build
 {
-    public class PatchBuildOptions {
+    public class SourceFileOptions {
         public List<string> FileSources { get; set; } = new List<string> {
             Path.Join(System.Environment.CurrentDirectory, "GameFiles")
         };

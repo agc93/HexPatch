@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using BuildEngine;
+using HexPatch.Build;
 using static System.Console;
 
 namespace HexPatch.Console
@@ -46,7 +48,7 @@ namespace HexPatch.Console
                     }
                 }
             };
-            var fileService = new GameFileService(new PatchBuildOptions() {
+            var fileService = new SourceFileService(new SourceFileOptions() {
                 FileSources = new List<string> {
                     @"X:\ProjectWingman\Dumped\Data"
                 },
@@ -54,27 +56,8 @@ namespace HexPatch.Console
             });
             var sets = new List<PatchSet> {prez, aoa};
             var allFiles = Directory.EnumerateFiles(System.Environment.CurrentDirectory, "*.dtm", SearchOption.TopDirectoryOnly);
-            var fileMods = new Dictionary<string, Mod>();
-            foreach (var file in allFiles.Where(f => f.Length > 0 && File.ReadAllText(f).Any()))
-            {
-                try
-                {
-                    var allText = File.ReadAllText(file);
-                    var jsonOpts = new JsonSerializerOptions {
-                        PropertyNameCaseInsensitive = true,
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                        WriteIndented = true
-                    };
-                    if (JsonSerializer.Deserialize<Mod>(allText, jsonOpts) is var jsonMod && jsonMod?.FilePatches != null && jsonMod.FilePatches.Any()) {
-                        fileMods.Add(file, jsonMod);
-                    }
-                }
-                catch (System.Exception)
-                {
-                    WriteLine($"Failed to load mod data from {file}!");
-                }
-            }
-            // var mod = System.Text.Json.JsonSerializer.Deserialize<Mod>(System.IO.File.ReadAllText(@"C:\Users\alist\Source\Modding\HexPatch\src\test_mod.dtm"));
+            var fileMods = new ModFileLoader().LoadFromFiles(allFiles).ToList();
+            // var builder = new ModPatchServiceBuilder(fileService, new FilePatcher(null))
             var patcher = new FilePatcher(null);
             var enabledMods = Sharprompt.Prompt.MultiSelect<KeyValuePair<string, Mod>>("Choose the patch mods you'd like to apply", fileMods, 10, 0, -1, m => GetLabel(m.Value) ?? Path.GetFileNameWithoutExtension(m.Key));
             var requiredFiles = enabledMods

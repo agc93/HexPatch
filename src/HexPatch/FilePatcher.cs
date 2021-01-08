@@ -10,19 +10,17 @@ namespace HexPatch
     public class PatchOptions { }
     public class FilePatcher
     {
-        private readonly FilePatch _patch;
         private readonly ILogger<FilePatcher> _logger;
-        private readonly DirectoryInfo _workspace;
 
         public FilePatcher(ILogger<FilePatcher> logger)
         {
             _logger = logger;
         }
 
-        public async Task<FileInfo> RunPatch(string sourcePath, IEnumerable<PatchSet> sets, string targetFilePath = null)
+        public async Task<FileInfo> RunPatch(string sourcePath, IEnumerable<PatchSet> sets, string? targetFilePath = null)
         {
             var fi = new FileInfo(sourcePath);
-            var finalTarget = Path.Combine(fi.Directory.FullName, $"{Path.GetFileNameWithoutExtension(fi.FullName)}.mod{Path.GetExtension(fi.FullName)}");
+            var finalTarget = GetTarget(fi, targetFilePath);
             var fileBytes = await File.ReadAllBytesAsync(fi.FullName);
             foreach (var set in sets)
             {
@@ -48,13 +46,25 @@ namespace HexPatch
             return new FileInfo(finalTarget);
         }
 
-        private byte[] ReplaceBytesBefore(byte[] src, IEnumerable<KeyValuePair<int, byte[]>> repls)
+        private static string GetTarget(FileInfo sourcePath, string? targetPath)
+        {
+            var sourceDir = sourcePath.Directory?.FullName;
+            if (!string.IsNullOrWhiteSpace(targetPath)) {
+                return Path.IsPathRooted(targetPath) ? targetPath : !string.IsNullOrWhiteSpace(sourceDir) ? Path.Combine(sourceDir , targetPath) : targetPath;                
+            }
+
+            var targetName =
+                $"{Path.GetFileNameWithoutExtension(sourcePath.FullName)}.mod{Path.GetExtension(sourcePath.FullName)}";
+            return string.IsNullOrWhiteSpace(sourceDir) ? targetName : Path.Combine(sourceDir, targetName);
+        }
+
+        private byte[] ReplaceBytesBefore(byte[] src, IEnumerable<KeyValuePair<int, byte[]>> replacements)
         {
             var dst = new byte[src.Length];
             var lastIndex = 0;
             var nextByte = 0;
-            repls = repls.OrderBy(r => r.Key);
-            foreach (var (key, replacement) in repls)
+            replacements = replacements.OrderBy(r => r.Key);
+            foreach (var (key, replacement) in replacements)
             {
                 // var changeOffset = repl.Key - lastIndex - repl.Value.Length;
                 var unchanged = key - nextByte;
