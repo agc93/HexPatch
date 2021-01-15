@@ -1,10 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-<!--      <ProjectReference Include="..\..\..\..\Engine\BuildEngine\src\BuildEngine\BuildEngine.csproj" />-->
       <ProjectReference Include="..\HexPatch\HexPatch.csproj" />
         <PackageReference Include="BuildEngine" Version="0.0.0-preview.0.3" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <PackageId>HexPatch.Build</PackageId>
+        <Description>A companion library for HexPatch using BuildEngine to create repeatable bulk edits, designed for binary mods.</Description>
+        <Authors>agc93</Authors>
+        <Copyright>© Alistair Chapman 2021</Copyright>
+        <PackageTags>hex;modding;</PackageTags>
+        <RepositoryUrl>https://github.com/agc93/HexPatch</RepositoryUrl>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/agc93/HexPatch</PackageProjectUrl>
+    </PropertyGroup>
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
