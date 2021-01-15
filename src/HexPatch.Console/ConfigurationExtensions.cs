@@ -43,9 +43,7 @@ namespace HexPatch.Console {
                         format.Value.Invoke(configBuilder, path + format.Key);
                     }
                 } else {
-                    var matchedFiles = formats.Where(f => {
-                        return File.Exists(path + f.Key);
-                    });
+                    var matchedFiles = formats.Where(f => File.Exists(path + f.Key));
                     if (matchedFiles.Any()) {
                         foreach (var match in matchedFiles)
                         {

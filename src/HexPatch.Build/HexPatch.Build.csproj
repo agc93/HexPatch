@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\Engine\BuildEngine\src\BuildEngine\BuildEngine.csproj" />
+<!--      <ProjectReference Include="..\..\..\..\Engine\BuildEngine\src\BuildEngine\BuildEngine.csproj" />-->
       <ProjectReference Include="..\HexPatch\HexPatch.csproj" />
+        <PackageReference Include="BuildEngine" Version="0.0.0-preview.0.3" />
     </ItemGroup>
 
     <PropertyGroup>

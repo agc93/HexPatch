@@ -363,3 +363,5 @@ FodyWeavers.xsd
 
 
 **/*.dtm
+
+tools/**

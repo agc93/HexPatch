@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace HexPatch
 {
-    public class PatchOptions { }
     public class FilePatcher
     {
         private readonly ILogger<FilePatcher> _logger;
