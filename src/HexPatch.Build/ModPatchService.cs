@@ -13,6 +13,7 @@ namespace HexPatch.Build {
         private readonly SourceFileService _fileService;
         private readonly ILogger<ModPatchService> _logger;
         private List<KeyValuePair<string, Mod>> Mods { get; }
+        public Func<BuildContext, FileInfo> PreBuildAction { get; set; }
 
         internal ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, List<KeyValuePair<string, Mod>> mods, ILogger<ModPatchService> logger) {
             _patcher = patcher;
@@ -56,8 +57,33 @@ namespace HexPatch.Build {
 
         public (bool Success, FileInfo Output)? RunBuild(FileInfo targetFile)
         {
+            var bResult = PreBuildAction?.Invoke(_ctx);
+            if (bResult != null && bResult.Exists)
+            {
+                targetFile = bResult;
+            }
             var result = _ctx.BuildScript?.RunBuild(targetFile.FullName);
-            return result;
+            return result ?? (bResult != null ? (true, bResult) : null);
+        }
+
+        public (bool Success, FileInfo Output)? RunBuild(Func<BuildContext, FileInfo> targetFileFunc)
+        {
+            var target = targetFileFunc.Invoke(_ctx);
+            return RunBuild(target);
+        }
+
+        public (bool Success, T Output)? RunAction<T>(Func<BuildContext, T> buildFunc) where T : class
+        {
+            try
+            {
+                var result = buildFunc.Invoke(_ctx);
+                return (true, result);
+            }
+            catch (Exception e)
+            {
+                _logger?.LogWarning("Error encountered during patch action!", e);
+                return (false, null);
+            }
         }
     }
 }
