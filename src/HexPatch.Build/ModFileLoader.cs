@@ -31,7 +31,11 @@ namespace HexPatch.Build
                     var jsonOpts = new JsonSerializerOptions {
                         PropertyNameCaseInsensitive = true,
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                        WriteIndented = true
+                        WriteIndented = true,
+                        Converters =
+                        {
+                            new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                        }
                     };
                     if (JsonSerializer.Deserialize<Mod>(allText, jsonOpts) is var jsonMod && jsonMod?.FilePatches != null && jsonMod.FilePatches.Any()) {
                         _logger?.LogTrace($"Successfully loaded mod data from {file}: {jsonMod.GetLabel(Path.GetFileName(file))}");

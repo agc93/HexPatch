@@ -27,18 +27,22 @@ namespace HexPatch
                 // fileBytes = ;
                 System.Console.WriteLine($"Running patches for {set.Name}");
                 System.Console.WriteLine($"Contains the following patches: {string.Join(", ", set.Patches.Select(p => p.Description))}");
-                var changes = set.Patches.Where(p => p.Type == SubstitutionType.Before).SelectMany(p => PatternAt(fileBytes, p.Template.ToByteArray()).Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray())));
+                var changes = set.Patches
+                    .Where(p => p.Type == SubstitutionType.Before)
+                    .SelectMany(p => PatternAt(fileBytes, p.Template.ToByteArray())
+                                        .Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray()))
+                    );
                 var finalBytes = ReplaceBytesBefore(fileBytes, changes);
-                /* foreach (var patch in set.Patches)
-                {
-                    var allMatches = PatternAt(fileBytes, patch.Template.ToByteArray());
-                    // var changes = patch.
-                    foreach (var match in allMatches)
-                    {
-                        var replacement = patch.Substitution.ToByteArray();
-                        // var modArray = ReplaceBytes()
-                    }
-                } */
+                var replacements = set.Patches
+                    .Where(p => p.Type == SubstitutionType.InPlace)
+                    .SelectMany(p => PatternAt(fileBytes, p.Template.ToByteArray())
+                                    .Select(o => new ByteReplacement {
+                                        MatchOffset = o,
+                                        Key = p.Template.ToByteArray(),
+                                        Replacement = p.Substitution.ToByteArray()
+                                    })
+                );
+                finalBytes = ReplaceBytes(finalBytes, replacements);
                 fileBytes = finalBytes;
             }
             await File.WriteAllBytesAsync(finalTarget, fileBytes);
@@ -51,9 +55,8 @@ namespace HexPatch
             if (!string.IsNullOrWhiteSpace(targetPath)) {
                 return Path.IsPathRooted(targetPath) ? targetPath : !string.IsNullOrWhiteSpace(sourceDir) ? Path.Combine(sourceDir , targetPath) : targetPath;                
             }
-
-            var targetName =
-                $"{Path.GetFileNameWithoutExtension(sourcePath.FullName)}.mod{Path.GetExtension(sourcePath.FullName)}";
+            var targetName = Path.GetFileName(sourcePath.FullName);
+            
             return string.IsNullOrWhiteSpace(sourceDir) ? targetName : Path.Combine(sourceDir, targetName);
         }
 
@@ -83,6 +86,34 @@ namespace HexPatch
             return dst;
         }
 
+        public static byte[] ReplaceBytes(byte[] src, IEnumerable<ByteReplacement> replacements)
+    {
+        var dst = new byte[src.Length + Convert.ToInt32(Math.Abs(src.Length*0.25))];
+        var lastIndex = 0;
+        replacements = replacements.OrderBy(r => r.MatchOffset);
+        var srcStream = new MemoryStream(src);
+        var tgtStream = new MemoryStream(dst);
+        foreach (var replacement in replacements)
+        {
+            var tgt = new List<byte[]>();
+            var unchanged = Convert.ToInt32(replacement.MatchOffset - srcStream.Position);
+            // before found array
+            srcStream.CopyToStream(tgtStream, unchanged);
+            tgtStream.Write(replacement.Replacement);
+            srcStream.Seek(replacement.Key.Length, SeekOrigin.Current);
+
+            lastIndex = (int)srcStream.Position;
+        }
+        srcStream.CopyToStream(tgtStream, src.Length - lastIndex);
+        var finalLength = tgtStream.Position;
+        var final = new byte[finalLength];
+        tgtStream.Seek(0, SeekOrigin.Begin);
+        tgtStream.Read(final, 0, (int)finalLength);
+        // Array.Resize(ref dst, finalLength);
+
+        return final;
+    }
+
         private static IEnumerable<int> PatternAt(IReadOnlyCollection<byte> source, IReadOnlyCollection<byte> pattern)
         {
             for (var i = 0; i < source.Count; i++)
@@ -93,5 +124,11 @@ namespace HexPatch
                 }
             }
         }
+    }
+
+    public record ByteReplacement {
+        public int MatchOffset {get;init;}
+        public byte[] Key {get;init;}
+        public byte[] Replacement {get; init;}
     }
 }

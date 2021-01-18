@@ -7,15 +7,15 @@ using BuildEngine;
 using Microsoft.Extensions.Logging;
 
 namespace HexPatch.Build {
-    public class ModPatchService {
-        private readonly FilePatcher _patcher;
-        private readonly BuildContext _ctx;
-        private readonly SourceFileService _fileService;
-        private readonly ILogger<ModPatchService> _logger;
-        private List<KeyValuePair<string, Mod>> Mods { get; }
+    public class ModPatchService : IDisposable {
+        protected readonly FilePatcher _patcher;
+        protected readonly BuildContext _ctx;
+        protected readonly SourceFileService _fileService;
+        protected readonly ILogger<ModPatchService> _logger;
+        public List<KeyValuePair<string, Mod>> Mods { get; }
         public Func<BuildContext, FileInfo> PreBuildAction { get; set; }
 
-        internal ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, List<KeyValuePair<string, Mod>> mods, ILogger<ModPatchService> logger) {
+        internal protected ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, List<KeyValuePair<string, Mod>> mods, ILogger<ModPatchService> logger) {
             _patcher = patcher;
             _ctx = context;
             Mods = mods;
@@ -23,7 +23,7 @@ namespace HexPatch.Build {
             _logger = logger;
         }
 
-        public async Task<ModPatchService> RunPatches() {
+        public virtual async Task<ModPatchService> RunPatches() {
             foreach (var (dtmFile, mod) in Mods)
             {
                 var modifiedFiles = new List<FileInfo>();
@@ -39,7 +39,7 @@ namespace HexPatch.Build {
             return this;
         }
 
-        public ModPatchService LoadFiles()
+        public virtual ModPatchService LoadFiles(Func<string, IEnumerable<string>> extraFileSelector = null)
         {
             var requiredFiles = this.Mods
                 .SelectMany(em => em.Value.FilePatches)
@@ -50,12 +50,19 @@ namespace HexPatch.Build {
             foreach (var file in requiredFiles)
             {
                 var srcFile = _fileService.LocateFile(Path.GetFileName(file));
-                this._ctx.AddFile(file, srcFile);
+                this._ctx.AddFile(Path.GetDirectoryName(file), srcFile);
+                if (extraFileSelector != null) {
+                    var extraFiles = extraFileSelector.Invoke(file) ?? new List<string>();
+                    foreach (var eFile in extraFiles) {
+                        var exFile = _fileService.LocateFile(Path.GetFileName(eFile));
+                        this._ctx.AddFile(Path.GetDirectoryName(eFile), exFile);
+                    }
+                }
             }
             return this;
         }
 
-        public (bool Success, FileInfo Output)? RunBuild(FileInfo targetFile)
+        public virtual (bool Success, FileInfo Output)? RunBuild(FileInfo targetFile)
         {
             var bResult = PreBuildAction?.Invoke(_ctx);
             if (bResult != null && bResult.Exists)
@@ -63,16 +70,16 @@ namespace HexPatch.Build {
                 targetFile = bResult;
             }
             var result = _ctx.BuildScript?.RunBuild(targetFile.FullName);
-            return result ?? (bResult != null ? (true, bResult) : null);
+            return ((bool Success, FileInfo Output)?)(result ?? (bResult != null ? (true, bResult) : null));
         }
 
-        public (bool Success, FileInfo Output)? RunBuild(Func<BuildContext, FileInfo> targetFileFunc)
+        public virtual (bool Success, FileInfo Output)? RunBuild(Func<BuildContext, FileInfo> targetFileFunc)
         {
             var target = targetFileFunc.Invoke(_ctx);
             return RunBuild(target);
         }
 
-        public (bool Success, T Output)? RunAction<T>(Func<BuildContext, T> buildFunc) where T : class
+        public virtual (bool Success, T Output)? RunAction<T>(Func<BuildContext, T> buildFunc) where T : class
         {
             try
             {
@@ -84,6 +91,11 @@ namespace HexPatch.Build {
                 _logger?.LogWarning("Error encountered during patch action!", e);
                 return (false, null);
             }
+        }
+
+        public virtual void Dispose()
+        {
+            ((IDisposable)_ctx).Dispose();
         }
     }
 }

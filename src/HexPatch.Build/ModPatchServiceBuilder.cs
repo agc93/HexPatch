@@ -26,10 +26,10 @@ namespace HexPatch.Build
             _tgtLogger = logger;
         }
 
-        public async Task<ModPatchService> GetPatchService(IEnumerable<KeyValuePair<string, Mod>> modCollection)
+        public async Task<ModPatchService> GetPatchService(IEnumerable<KeyValuePair<string, Mod>> modCollection, string ctxName = null)
         {
             var mods = modCollection.ToList();
-            var ctx = await _ctxFactory.Create(null);
+            var ctx = await _ctxFactory.Create(ctxName);
             return new ModPatchService(_filePatcher, _fileService, ctx, mods, _tgtLogger);
 
         }
