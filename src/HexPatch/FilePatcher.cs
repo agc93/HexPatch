@@ -9,6 +9,10 @@ namespace HexPatch
 {
     public class FilePatcher
     {
+        internal record BreakPattern {
+            internal IReadOnlyCollection<byte> Pattern {get; init;} = new byte[0];
+            internal int? Offset {get;init;}
+        }
         private readonly ILogger<FilePatcher> _logger;
 
         public FilePatcher(ILogger<FilePatcher> logger)
@@ -29,13 +33,13 @@ namespace HexPatch
                 System.Console.WriteLine($"Contains the following patches: {string.Join(", ", set.Patches.Select(p => p.Description))}");
                 var changes = set.Patches
                     .Where(p => p.Type == SubstitutionType.Before)
-                    .SelectMany(p => PatternAt(fileBytes, p.Template.ToByteArray())
+                    .SelectMany(p => PatternAt(fileBytes, p)
                                         .Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray()))
                     );
                 var finalBytes = ReplaceBytesBefore(fileBytes, changes);
                 var replacements = set.Patches
                     .Where(p => p.Type == SubstitutionType.InPlace)
-                    .SelectMany(p => PatternAt(fileBytes, p.Template.ToByteArray())
+                    .SelectMany(p => PatternAt(fileBytes, p)
                                     .Select(o => new ByteReplacement {
                                         MatchOffset = o,
                                         Key = p.Template.ToByteArray(),
@@ -112,6 +116,62 @@ namespace HexPatch
         // Array.Resize(ref dst, finalLength);
 
         return final;
+    }
+
+    private static IEnumerable<int> PatternAt(IReadOnlyCollection<byte> source, Patch patch) {
+        IEnumerable<int> GetPatterns(IReadOnlyCollection<byte> pattern, Func<int, int>? skipFunc = null, BreakPattern? breakPattern = null) {
+            skipFunc ??= (i) => i;
+            for (var i = 0; i < source.Count; i++)
+            {
+                var current = source.Skip(skipFunc(i)).Take(pattern.Count);
+                if (breakPattern != null && breakPattern.Pattern.Any() && current.SequenceEqual(breakPattern.Pattern)) {
+                    break;
+                }
+                if (breakPattern != null && breakPattern.Offset != null && skipFunc(i) == breakPattern.Offset) {
+                    break;
+                }
+                if (current.SequenceEqual(pattern))
+                {
+                    yield return skipFunc(i);
+                }
+            }
+        }
+        if (patch.Window?.After == null) {
+            return GetPatterns(patch.Template.ToByteArray());
+        } else if (!string.IsNullOrWhiteSpace(patch.Window?.After) && !string.IsNullOrWhiteSpace(patch.Window?.Before)) {
+            //both sides of the window set
+            var openBounds = GetPatterns(patch.Window.After.ToByteArray()).ToList();
+            //this is a fucking disaster
+            //but seems to work
+            var windows = openBounds.Aggregate(new List<(int StartOffset, int EndOffset)>(), (acc, current) => {
+                var end = GetPatterns(patch.Window.Before.ToByteArray(), i => current + i, new BreakPattern { Offset = openBounds.TryGetNext(openBounds.IndexOf(current), int.MaxValue)}).ToList();
+                if (end.Any()) {
+                    acc.Add((current, end.First()));
+                };
+                return acc;
+                // return (start, end.First());
+            }, acc => acc.ToList());
+            var allMatches = windows.SelectMany((window, idx) => {
+                return GetPatterns(patch.Template.ToByteArray(), i => window.StartOffset + i, new BreakPattern { Pattern = patch.Window.After.ToByteArray(), Offset = window.EndOffset});
+            }).ToList();
+            return allMatches;
+            /*
+            (for finding pattern X between A and B)
+            This just takes every instance of A, and creates a window from there to the next occurrence of B (unless it find another A)
+            So we get a set of windows ending at B, starting from the *nearest* instance of A. These windows may or may not include X
+            We then search those windows for X, returning every offset of X from anywhere in each window.
+            */
+        } else if (!string.IsNullOrWhiteSpace(patch.Window?.After)) {
+            //so this doubles up
+            // if you ask for a pattern after A (with no end bound) but A appears twice
+            // then it will start looking at A again
+            // we get around this by baioling out of GetPatterns if we hit the next instance of A
+            var startPatterns = GetPatterns(patch.Window.After.ToByteArray()).ToList();
+            var matchPatterns = startPatterns.Select((start, idx) => GetPatterns(patch.Template.ToByteArray(), i => start + i, new BreakPattern {Offset = startPatterns.TryGetNext(idx, int.MaxValue)})).ToList();
+            var final = matchPatterns.SelectMany(i => i).ToList();
+            return final;
+        }
+        return new int[0];
     }
 
         private static IEnumerable<int> PatternAt(IReadOnlyCollection<byte> source, IReadOnlyCollection<byte> pattern)
