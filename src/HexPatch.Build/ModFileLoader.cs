@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace HexPatch.Build
 {
-    public class ModFileLoader
+    public class ModFileLoader : IModFileLoader
     {
         private readonly ILogger<ModFileLoader> _logger;
 
