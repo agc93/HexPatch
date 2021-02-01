@@ -7,15 +7,15 @@ using BuildEngine;
 using Microsoft.Extensions.Logging;
 
 namespace HexPatch.Build {
-    public class ModPatchService : IDisposable {
+    public class ModPatchService<TMod> : IDisposable where TMod : Mod {
         protected readonly FilePatcher _patcher;
         protected readonly BuildContext _ctx;
         protected readonly SourceFileService _fileService;
-        protected readonly ILogger<ModPatchService> _logger;
-        public List<KeyValuePair<string, Mod>> Mods { get; }
+        protected readonly ILogger<ModPatchService<TMod>> _logger;
+        public List<KeyValuePair<string, TMod>> Mods { get; }
         public Func<BuildContext, FileInfo> PreBuildAction { get; set; }
 
-        internal protected ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, List<KeyValuePair<string, Mod>> mods, ILogger<ModPatchService> logger) {
+        internal protected ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, List<KeyValuePair<string, TMod>> mods, ILogger<ModPatchService<TMod>> logger) {
             _patcher = patcher;
             _ctx = context;
             Mods = mods;
@@ -23,7 +23,7 @@ namespace HexPatch.Build {
             _logger = logger;
         }
 
-        public virtual async Task<ModPatchService> RunPatches() {
+        public virtual async Task<ModPatchService<TMod>> RunPatches() {
             foreach (var (dtmFile, mod) in Mods)
             {
                 var modifiedFiles = new List<FileInfo>();
@@ -39,7 +39,7 @@ namespace HexPatch.Build {
             return this;
         }
 
-        public virtual ModPatchService LoadFiles(Func<string, IEnumerable<string>> extraFileSelector = null)
+        public virtual ModPatchService<TMod> LoadFiles(Func<string, IEnumerable<string>> extraFileSelector = null)
         {
             var requiredFiles = this.Mods
                 .SelectMany(em => em.Value.FilePatches)

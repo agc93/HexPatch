@@ -16,9 +16,9 @@ namespace HexPatch.Build
         private readonly SourceFileService _fileService;
         private readonly FilePatcher _filePatcher;
         private readonly BuildContextFactory _ctxFactory;
-        private readonly ILogger<ModPatchService> _tgtLogger;
+        private readonly ILogger<ModPatchService<Mod>> _tgtLogger;
 
-        public ModPatchServiceBuilder(SourceFileService sourceFileService, FilePatcher filePatcher, BuildContextFactory contextFactory, ILogger<ModPatchService> logger)
+        public ModPatchServiceBuilder(SourceFileService sourceFileService, FilePatcher filePatcher, BuildContextFactory contextFactory, ILogger<ModPatchService<Mod>> logger)
         {
             _fileService = sourceFileService;
             _filePatcher = filePatcher;
@@ -26,11 +26,11 @@ namespace HexPatch.Build
             _tgtLogger = logger;
         }
 
-        public async Task<ModPatchService> GetPatchService(IEnumerable<KeyValuePair<string, Mod>> modCollection, string ctxName = null)
+        public async Task<ModPatchService<Mod>> GetPatchService(IEnumerable<KeyValuePair<string, Mod>> modCollection, string ctxName = null)
         {
             var mods = modCollection.ToList();
             var ctx = await _ctxFactory.Create(ctxName);
-            return new ModPatchService(_filePatcher, _fileService, ctx, mods, _tgtLogger);
+            return new ModPatchService<Mod>(_filePatcher, _fileService, ctx, mods, _tgtLogger);
 
         }
     }
