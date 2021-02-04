@@ -34,12 +34,21 @@ namespace HexPatch
                 var changes = set.Patches
                     .Where(p => p.Type == SubstitutionType.Before)
                     .SelectMany(p => PatternAt(fileBytes, p)
+                                        .TakeTo(p.Window?.MaxMatches)
                                         .Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray()))
                     );
+                var vChanges = set.Patches
+                    .Where(p => p.Type == SubstitutionType.ValueBefore)
+                    .SelectMany(p => PatternAt(fileBytes, p)
+                        .TakeTo(p.Window?.MaxMatches)
+                        .Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray()))
+                    );
                 var finalBytes = ReplaceBytesBefore(fileBytes, changes);
+                finalBytes = ReplaceBytesBefore(finalBytes, vChanges, true);
                 var replacements = set.Patches
                     .Where(p => p.Type == SubstitutionType.InPlace)
                     .SelectMany(p => PatternAt(fileBytes, p)
+                                    .TakeTo(p.Window?.MaxMatches)
                                     .Select(o => new ByteReplacement {
                                         MatchOffset = o,
                                         Key = p.Template.ToByteArray(),
@@ -64,7 +73,7 @@ namespace HexPatch
             return string.IsNullOrWhiteSpace(sourceDir) ? targetName : Path.Combine(sourceDir, targetName);
         }
 
-        private byte[] ReplaceBytesBefore(byte[] src, IEnumerable<KeyValuePair<int, byte[]>> replacements)
+        private byte[] ReplaceBytesBefore(byte[] src, IEnumerable<KeyValuePair<int, byte[]>> replacements, bool requireValue = false)
         {
             var dst = new byte[src.Length];
             var lastIndex = 0;
@@ -76,8 +85,24 @@ namespace HexPatch
                 var unchanged = key - nextByte;
                 // before found array
                 Buffer.BlockCopy(src, nextByte, dst, nextByte, unchanged);
+                if (requireValue)
+                {
+                    var buffer = new byte[replacement.Length];
+                    Buffer.BlockCopy(src, key - replacement.Length, buffer, 0, replacement.Length);
+                    if (buffer.All(b => b == 0x0))
+                    {
+                        Buffer.BlockCopy(src, key - replacement.Length, dst, key - replacement.Length, replacement.Length);
+                    }
+                    else
+                    {
+                        Buffer.BlockCopy(replacement, 0, dst, key - replacement.Length, replacement.Length);
+                    }
+                }
+                else
+                {
+                    Buffer.BlockCopy(replacement, 0, dst, key - replacement.Length, replacement.Length);
+                }
                 // repl copy
-                Buffer.BlockCopy(replacement, 0, dst, key - replacement.Length, replacement.Length);
                 lastIndex = key;
                 nextByte = key;
             }
@@ -113,8 +138,6 @@ namespace HexPatch
         var final = new byte[finalLength];
         tgtStream.Seek(0, SeekOrigin.Begin);
         tgtStream.Read(final, 0, (int)finalLength);
-        // Array.Resize(ref dst, finalLength);
-
         return final;
     }
 
@@ -165,7 +188,7 @@ namespace HexPatch
             //so this doubles up
             // if you ask for a pattern after A (with no end bound) but A appears twice
             // then it will start looking at A again
-            // we get around this by baioling out of GetPatterns if we hit the next instance of A
+            // we get around this by bailing out of GetPatterns if we hit the next instance of A
             var startPatterns = GetPatterns(patch.Window.After.ToByteArray()).ToList();
             var matchPatterns = startPatterns.Select((start, idx) => GetPatterns(patch.Template.ToByteArray(), i => start + i, new BreakPattern {Offset = startPatterns.TryGetNext(idx, int.MaxValue)})).ToList();
             var final = matchPatterns.SelectMany(i => i).ToList();
@@ -173,17 +196,6 @@ namespace HexPatch
         }
         return new int[0];
     }
-
-        private static IEnumerable<int> PatternAt(IReadOnlyCollection<byte> source, IReadOnlyCollection<byte> pattern)
-        {
-            for (var i = 0; i < source.Count; i++)
-            {
-                if (source.Skip(i).Take(pattern.Count).SequenceEqual(pattern))
-                {
-                    yield return i;
-                }
-            }
-        }
     }
 
     public record ByteReplacement {

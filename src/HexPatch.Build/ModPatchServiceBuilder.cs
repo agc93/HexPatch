@@ -28,10 +28,17 @@ namespace HexPatch.Build
 
         public async Task<ModPatchService<Mod>> GetPatchService(IEnumerable<KeyValuePair<string, Mod>> modCollection, string ctxName = null)
         {
-            var mods = modCollection.ToList();
+            var mods = modCollection.Select(p => p.Value).ToList();
             var ctx = await _ctxFactory.Create(ctxName);
             return new ModPatchService<Mod>(_filePatcher, _fileService, ctx, mods, _tgtLogger);
 
+        }
+        
+        public async Task<ModPatchService<Mod>> GetPatchService(IEnumerable<Mod> modCollection, string ctxName = null)
+        {
+            var mods = modCollection.ToList();
+            var ctx = await _ctxFactory.Create(ctxName);
+            return new ModPatchService<Mod>(_filePatcher, _fileService, ctx, mods, _tgtLogger);
         }
     }
 }

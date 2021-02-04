@@ -61,5 +61,10 @@ namespace HexPatch
         internal static T TryGetNext<T>(this IEnumerable<T> collection, int index, T defaultValue) {
             return collection.ElementAtOrDefault(index + 1) ?? defaultValue;
         }
+
+        internal static IEnumerable<T> TakeTo<T>(this IEnumerable<T> collection, int? limit)
+        {
+            return (limit > 0) ? collection.Take(limit.Value) : collection;
+        }
     }
 }

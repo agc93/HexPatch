@@ -12,22 +12,22 @@ namespace HexPatch.Build {
         protected readonly BuildContext _ctx;
         protected readonly SourceFileService _fileService;
         protected readonly ILogger<ModPatchService<TMod>> _logger;
-        public List<KeyValuePair<string, TMod>> Mods { get; }
+        public List<TMod> Mods { get; }
         public Func<BuildContext, FileInfo> PreBuildAction { get; set; }
 
-        internal protected ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, List<KeyValuePair<string, TMod>> mods, ILogger<ModPatchService<TMod>> logger) {
+        internal protected ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, IEnumerable<TMod> mods, ILogger<ModPatchService<TMod>> logger) {
             _patcher = patcher;
             _ctx = context;
-            Mods = mods;
+            Mods = mods.ToList();
             _fileService = fileService;
             _logger = logger;
         }
 
         public virtual async Task<ModPatchService<TMod>> RunPatches() {
-            foreach (var (dtmFile, mod) in Mods)
+            foreach (var mod in Mods)
             {
                 var modifiedFiles = new List<FileInfo>();
-                _logger?.LogInformation($"Running patches for {mod.GetLabel(dtmFile)}");
+                _logger?.LogInformation($"Running patches for {mod.GetLabel()}");
                 foreach (var (targetFile, patchSets) in mod.FilePatches)
                 {
                     _logger?.LogDebug($"Patching {Path.GetFileName(targetFile)}...");
@@ -42,7 +42,7 @@ namespace HexPatch.Build {
         public virtual ModPatchService<TMod> LoadFiles(Func<string, IEnumerable<string>> extraFileSelector = null)
         {
             var requiredFiles = this.Mods
-                .SelectMany(em => em.Value.FilePatches)
+                .SelectMany(em => em.FilePatches)
                 .GroupBy(fp => fp.Key)
                 .Select(g => g.Key)
                 .Distinct()

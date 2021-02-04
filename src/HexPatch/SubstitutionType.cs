@@ -1,9 +1,9 @@
 ﻿namespace HexPatch
 {
     public enum SubstitutionType {
+        None,
         InPlace,
         Before,
-        After,
-        Between
+        ValueBefore
     }
 }
