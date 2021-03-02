@@ -175,7 +175,7 @@ namespace HexPatch
                 // return (start, end.First());
             }, acc => acc.ToList());
             var allMatches = windows.SelectMany((window, idx) => {
-                return GetPatterns(patch.Template.ToByteArray(), i => window.StartOffset + i, new BreakPattern { Pattern = patch.Window.After.ToByteArray(), Offset = window.EndOffset});
+                return GetPatterns(patch.Template.ToByteArray(), i => window.StartOffset + patch.Window.After.ToByteArray().Length + i, new BreakPattern { Pattern = patch.Window.After.ToByteArray(), Offset = window.EndOffset});
             }).ToList();
             return allMatches;
             /*

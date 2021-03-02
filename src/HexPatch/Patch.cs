@@ -11,9 +11,9 @@
 
     public record TemplateWindow {
         //[System.Text.Json.Serialization.JsonInclude]
-        public string Before {get; init;}
+        public string Before {get; set;}
         //[System.Text.Json.Serialization.JsonInclude]
-        public string After {get;init;}
+        public string After {get;set;}
         public int? MaxMatches { get; init; } = null;
     }
 }

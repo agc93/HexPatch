@@ -34,8 +34,8 @@ namespace HexPatch
         internal static string RemoveWhitespace(this string input, bool removeSeparator = true)
         {
             return new string(input.ToCharArray()
-                .Where(c => !Char.IsWhiteSpace(c))
-                .Where(c => removeSeparator ? c != '-' : true)
+                .Where(c => !char.IsWhiteSpace(c))
+                .Where(c => !removeSeparator || c != '-')
                 .ToArray());
         }
 
