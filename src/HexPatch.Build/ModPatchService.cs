@@ -44,6 +44,7 @@ namespace HexPatch.Build {
             var requiredFiles = this.Mods
                 .SelectMany(em => em.FilePatches)
                 .GroupBy(fp => fp.Key)
+                .Where(g => g.Any())
                 .Select(g => g.Key)
                 .Distinct()
                 .ToList();

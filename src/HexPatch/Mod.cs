@@ -23,6 +23,5 @@ namespace HexPatch
             }
             return sb.Length > 0 ? sb.ToString() : defaultValue;
         }
-        
     }
 }

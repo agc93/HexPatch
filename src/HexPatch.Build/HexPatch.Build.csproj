@@ -6,6 +6,10 @@
         <!-- <ProjectReference Include="..\..\..\..\Engine\BuildEngine\src\BuildEngine\BuildEngine.csproj" /> -->
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Runtime" />
+    </ItemGroup>
+
     <PropertyGroup>
         <PackageId>HexPatch.Build</PackageId>
         <Description>A companion library for HexPatch using BuildEngine to create repeatable bulk edits, designed for binary mods.</Description>
