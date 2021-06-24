@@ -51,31 +51,6 @@ namespace HexPatch
                             }));
                     finalBytes = replacementType.ReplaceBytes(finalBytes, changes);
                 }
-                /*var changes = set.Patches
-                    .Where(p => p.Type == SubstitutionType.Before)
-                    .SelectMany(p => PatternAt(fileBytes, p)
-                                        .TakeTo(p.Window?.MaxMatches)
-                                        .Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray()))
-                    );
-                var vChanges = set.Patches
-                    .Where(p => p.Type == SubstitutionType.ValueBefore)
-                    .SelectMany(p => PatternAt(fileBytes, p)
-                        .TakeTo(p.Window?.MaxMatches)
-                        .Select(o => new KeyValuePair<int, byte[]>(o, p.Substitution.ToByteArray()))
-                    );
-                var finalBytes = ReplaceBytesBefore(fileBytes, changes);
-                finalBytes = ReplaceBytesBefore(finalBytes, vChanges, true);
-                var replacements = set.Patches
-                    .Where(p => p.Type == SubstitutionType.InPlace)
-                    .SelectMany(p => PatternAt(fileBytes, p)
-                                    .TakeTo(p.Window?.MaxMatches)
-                                    .Select(o => new ByteReplacement {
-                                        MatchOffset = o,
-                                        Key = p.Template.ToByteArray(),
-                                        Replacement = p.Substitution.ToByteArray()
-                                    })
-                );
-                finalBytes = ReplaceBytes(finalBytes, replacements);*/
                 fileBytes = finalBytes;
             }
             await File.WriteAllBytesAsync(finalTarget, fileBytes);

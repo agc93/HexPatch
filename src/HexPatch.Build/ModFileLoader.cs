@@ -49,7 +49,7 @@ namespace HexPatch.Build
                             new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
                         }
                     };
-                    if (JsonSerializer.Deserialize<TMod>(allText, jsonOpts) is var jsonMod && jsonMod?.FilePatches != null && jsonMod.FilePatches.Any()) {
+                    if (JsonSerializer.Deserialize<TMod>(allText, jsonOpts) is {FilePatches: { }} jsonMod) {
                         _logger?.LogTrace($"Successfully loaded mod data from {file}: {jsonMod.GetLabel(Path.GetFileName(file))}");
                         fileMods.Add(file, jsonMod);
                     }
