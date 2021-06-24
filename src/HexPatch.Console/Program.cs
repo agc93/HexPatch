@@ -55,10 +55,10 @@ namespace HexPatch.Console
                 RecursiveFileSearch = true
             });
             var sets = new List<PatchSet> {prez, aoa};
-            var allFiles = Directory.EnumerateFiles(System.Environment.CurrentDirectory, "*.dtm", SearchOption.TopDirectoryOnly);
+            var allFiles = Directory.EnumerateFiles("C:/Users/alist/OneDrive/Source/HexPatch", "*.dtm", SearchOption.TopDirectoryOnly);
             var fileMods = new ModFileLoader().LoadFromFiles(allFiles).ToList();
             // var builder = new ModPatchServiceBuilder(fileService, new FilePatcher(null))
-            var patcher = new FilePatcher(null);
+            var patcher = new FilePatcher(null, null);
             var enabledMods = Sharprompt.Prompt.MultiSelect<KeyValuePair<string, Mod>>("Choose the patch mods you'd like to apply", fileMods, 10, 0, -1, m => GetLabel(m.Value) ?? Path.GetFileNameWithoutExtension(m.Key));
             var requiredFiles = enabledMods
                 .SelectMany(em => em.Value.FilePatches)
