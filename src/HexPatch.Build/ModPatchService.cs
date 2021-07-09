@@ -10,12 +10,12 @@ namespace HexPatch.Build {
     public class ModPatchService<TMod> : IDisposable where TMod : Mod {
         protected readonly FilePatcher _patcher;
         protected readonly BuildContext _ctx;
-        protected readonly SourceFileService _fileService;
+        protected readonly ISourceFileService _fileService;
         protected readonly ILogger<ModPatchService<TMod>> _logger;
         public List<TMod> Mods { get; }
         public Func<BuildContext, FileInfo> PreBuildAction { get; set; }
 
-        internal protected ModPatchService(FilePatcher patcher, SourceFileService fileService, BuildContext context, IEnumerable<TMod> mods, ILogger<ModPatchService<TMod>> logger) {
+        internal protected ModPatchService(FilePatcher patcher, ISourceFileService fileService, BuildContext context, IEnumerable<TMod> mods, ILogger<ModPatchService<TMod>> logger) {
             _patcher = patcher;
             _ctx = context;
             Mods = mods.ToList();

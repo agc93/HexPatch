@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 
 namespace HexPatch.Build {
-    public class SourceFileService
+    public class SourceFileService : ISourceFileService
     {
         private readonly SourceFileOptions _opts;
         private readonly List<DirectoryInfo> _sources;

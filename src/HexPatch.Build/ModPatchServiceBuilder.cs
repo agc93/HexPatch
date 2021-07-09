@@ -13,12 +13,12 @@ namespace HexPatch.Build
     /// </summary>
     public class ModPatchServiceBuilder
     {
-        private readonly SourceFileService _fileService;
+        private readonly ISourceFileService _fileService;
         private readonly FilePatcher _filePatcher;
         private readonly BuildContextFactory _ctxFactory;
         private readonly ILogger<ModPatchService<Mod>> _tgtLogger;
 
-        public ModPatchServiceBuilder(SourceFileService sourceFileService, FilePatcher filePatcher, BuildContextFactory contextFactory, ILogger<ModPatchService<Mod>> logger)
+        public ModPatchServiceBuilder(ISourceFileService sourceFileService, FilePatcher filePatcher, BuildContextFactory contextFactory, ILogger<ModPatchService<Mod>> logger)
         {
             _fileService = sourceFileService;
             _filePatcher = filePatcher;
