@@ -13,7 +13,7 @@ namespace HexPatch
         public string GetLabel(string defaultValue = null)
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(this?.Metadata.DisplayName)) {
+            if (!string.IsNullOrWhiteSpace(this?.Metadata?.DisplayName)) {
                 sb.Append(this.Metadata.DisplayName);
             } else if (this.FilePatches.Any(ps => ps.Value.Any(p => !string.IsNullOrWhiteSpace(p.Name)))) {
                 sb.Append(this.FilePatches.First(ps => ps.Value.Any(p => !string.IsNullOrWhiteSpace(p.Name))).Value.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Name)).Name);
