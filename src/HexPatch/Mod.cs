@@ -5,18 +5,18 @@ using System.Text.Json.Serialization;
 
 namespace HexPatch
 {
-    public class Mod {
-        [JsonPropertyName("_meta")]
-        public SetMetadata Metadata {get;set;}
-        public Dictionary<string, List<PatchSet>> FilePatches {get;set;}
+    public class Mod
+    {
+        [JsonPropertyName("_meta")] public SetMetadata? Metadata { get; set; } = new();
+        public Dictionary<string, List<PatchSet>> FilePatches { get; set; } = new();
 
-        public string GetLabel(string defaultValue = null)
+        public string GetLabel(string defaultValue = "unknown mod")
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(this?.Metadata?.DisplayName)) {
                 sb.Append(this.Metadata.DisplayName);
             } else if (this.FilePatches.Any(ps => ps.Value.Any(p => !string.IsNullOrWhiteSpace(p.Name)))) {
-                sb.Append(this.FilePatches.First(ps => ps.Value.Any(p => !string.IsNullOrWhiteSpace(p.Name))).Value.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Name)).Name);
+                sb.Append(this.FilePatches?.First(ps => ps.Value.Any(p => !string.IsNullOrWhiteSpace(p.Name))).Value.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Name)).Name);
             }
             if (!string.IsNullOrWhiteSpace(this?.Metadata?.Author)) {
                 sb.Append($" (by {this.Metadata.Author})");

@@ -2,8 +2,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\HexPatch\HexPatch.csproj" />
-        <PackageReference Include="BuildEngine" Version="0.0.0-preview.0.5" />
-        <!-- <ProjectReference Include="..\..\..\..\Engine\BuildEngine\src\BuildEngine\BuildEngine.csproj" /> -->
+        <PackageReference Include="BuildEngine" Version="0.0.0-preview.0.10" />
+<!--         <ProjectReference Include="..\..\..\..\Engine\BuildEngine\src\BuildEngine\BuildEngine.csproj" /> -->
     </ItemGroup>
 
     <ItemGroup>

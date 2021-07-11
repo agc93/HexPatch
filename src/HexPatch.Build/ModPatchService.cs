@@ -7,20 +7,20 @@ using BuildEngine;
 using Microsoft.Extensions.Logging;
 
 namespace HexPatch.Build {
-    public class ModPatchService<TMod> : IDisposable where TMod : Mod {
+    public class ModPatchService<TMod> : BuildService<DirectoryBuildContext>, IDisposable where TMod : Mod {
         protected readonly FilePatcher _patcher;
-        protected readonly BuildContext _ctx;
         protected readonly ISourceFileService _fileService;
         protected readonly ILogger<ModPatchService<TMod>> _logger;
+        private readonly IModBuilder _delegate;
         public List<TMod> Mods { get; }
-        public Func<BuildContext, FileInfo> PreBuildAction { get; set; }
+        public Func<DirectoryBuildContext, FileInfo> PreBuildAction { get; set; }
 
-        internal protected ModPatchService(FilePatcher patcher, ISourceFileService fileService, BuildContext context, IEnumerable<TMod> mods, ILogger<ModPatchService<TMod>> logger) {
+        internal protected ModPatchService(FilePatcher patcher, ISourceFileService fileService, DirectoryBuildContext context, IModBuilder @delegate, IEnumerable<TMod> mods, ILogger<ModPatchService<TMod>> logger) : base(context) {
             _patcher = patcher;
-            _ctx = context;
             Mods = mods.ToList();
             _fileService = fileService;
             _logger = logger;
+            _delegate = @delegate;
         }
 
         public virtual async Task<ModPatchService<TMod>> RunPatches() {
@@ -31,7 +31,7 @@ namespace HexPatch.Build {
                 foreach (var (targetFile, patchSets) in mod.FilePatches)
                 {
                     _logger?.LogDebug($"Patching {Path.GetFileName(targetFile)}...");
-                    var finalFile = await _patcher.RunPatch(Path.Join(_ctx.WorkingDirectory.FullName, targetFile), patchSets);
+                    var finalFile = await _patcher.RunPatch(Path.Join(Context.WorkingDirectory.FullName, targetFile), patchSets);
                     modifiedFiles.Add(finalFile);
                 }
                 _logger?.LogDebug($"Modified {modifiedFiles.Count} files: {string.Join(", ", modifiedFiles.Select(f => f.Name))}");
@@ -51,40 +51,42 @@ namespace HexPatch.Build {
             foreach (var file in requiredFiles)
             {
                 var srcFile = _fileService.LocateFile(Path.GetFileName(file));
-                this._ctx.AddFile(Path.GetDirectoryName(file), srcFile);
+                this.BuildContext.AddFile(Path.GetDirectoryName(file), srcFile);
                 if (extraFileSelector != null) {
                     var extraFiles = extraFileSelector.Invoke(file) ?? new List<string>();
                     foreach (var eFile in extraFiles) {
                         var exFile = _fileService.LocateFile(Path.GetFileName(eFile));
-                        this._ctx.AddFile(Path.GetDirectoryName(eFile), exFile);
+                        this.BuildContext.AddFile(Path.GetDirectoryName(eFile), exFile);
                     }
                 }
             }
             return this;
         }
 
-        public virtual (bool Success, FileInfo Output)? RunBuild(FileInfo targetFile)
+        public virtual async Task<(bool Success, FileInfo Output)?> RunBuild(FileInfo targetFile)
         {
-            var bResult = PreBuildAction?.Invoke(_ctx);
-            if (bResult != null && bResult.Exists)
+            var bResult = PreBuildAction?.Invoke(Context);
+            if (bResult is {Exists: true})
             {
                 targetFile = bResult;
             }
-            var result = _ctx.BuildScript?.RunBuild(targetFile.FullName);
-            return ((bool Success, FileInfo Output)?)(result ?? (bResult != null ? (true, bResult) : null));
+            
+            var result = await _delegate.RunBuildAsync(BuildContext, targetFile.FullName);
+            return ((bool Success, FileInfo Output)?)result;
         }
 
-        public virtual (bool Success, FileInfo Output)? RunBuild(Func<BuildContext, FileInfo> targetFileFunc)
-        {
-            var target = targetFileFunc.Invoke(_ctx);
-            return RunBuild(target);
+        public virtual async Task<(bool Success, FileInfo Output)?> RunBuild(string targetFileName) {
+            var target = Path.IsPathRooted(targetFileName)
+                ? new FileInfo(targetFileName)
+                : new FileInfo(Path.Combine(Context.WorkingDirectory.FullName, targetFileName));
+            return await RunBuild(target);
         }
 
-        public virtual (bool Success, T Output)? RunAction<T>(Func<BuildContext, T> buildFunc) where T : class
+        public virtual (bool Success, T Output)? RunAction<T>(Func<DirectoryBuildContext, T> buildFunc) where T : class
         {
             try
             {
-                var result = buildFunc.Invoke(_ctx);
+                var result = buildFunc.Invoke(Context);
                 return (true, result);
             }
             catch (Exception e)
@@ -96,7 +98,11 @@ namespace HexPatch.Build {
 
         public virtual void Dispose()
         {
-            ((IDisposable)_ctx).Dispose();
+            BuildContext.Dispose();
+        }
+
+        public override async Task<(bool Success, FileSystemInfo Output)> RunBuildAsync(string targetFileName) {
+            return await _delegate.RunBuildAsync(BuildContext, targetFileName);
         }
     }
 }
