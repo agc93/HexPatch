@@ -14,34 +14,34 @@ namespace HexPatch.Console
     {
         static async System.Threading.Tasks.Task Main(string[] args)
         {
-            var aoa = new PatchSet() {
+            var aoa = new FilePatchSet() {
                 Name = "AoA Unlocker",
-                Patches = new System.Collections.Generic.List<Patch> {
-                new Patch {
+                Patches = new System.Collections.Generic.List<FilePatch> {
+                new FilePatch {
                     Description = "Unlocks AoA",
                     Substitution = "01",
                     Template = "004802"
                 }
             }};
-            var unlock = new PatchSet {
+            var unlock = new FilePatchSet {
                 Name = "Unlock all Planes",
-                Patches = new List<Patch> {
-                    new Patch {
+                Patches = new List<FilePatch> {
+                    new FilePatch {
                         Description = "All Planes available",
                         Template = "00 3E 02",
                         Substitution = "01"
                     },
-                    new Patch {
+                    new FilePatch {
                         Description = "All planes unlocked",
                         Template = "00 D7 01",
                         Substitution = "01"
                     }
                 }
             };
-            var prez = new PatchSet {
+            var prez = new FilePatchSet {
                 Name = "Prez Everywhere",
-                Patches = new List<Patch> {
-                    new Patch {
+                Patches = new List<FilePatch> {
+                    new FilePatch {
                         Description = "Set Pilot count to 2",
                         Template = "00 00 00 1C 01",
                         Substitution = "02"
@@ -54,7 +54,7 @@ namespace HexPatch.Console
                 },
                 RecursiveFileSearch = true
             });
-            var sets = new List<PatchSet> {prez, aoa};
+            var sets = new List<FilePatchSet> {prez, aoa};
             var allFiles = Directory.EnumerateFiles("C:/Users/alist/OneDrive/Source/HexPatch", "*.dtm", SearchOption.TopDirectoryOnly);
             var fileMods = new ModFileLoader().LoadFromFiles(allFiles).ToList();
             // var builder = new ModPatchServiceBuilder(fileService, new FilePatcher(null))

@@ -5,13 +5,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using HexPatch.Runtime;
 using Microsoft.Extensions.Logging;
+using ModEngine.Core;
 
 namespace HexPatch
 {
     public class FilePatcher
     {
         internal record BreakPattern {
-            internal IReadOnlyCollection<byte> Pattern {get; init;} = new byte[0];
+            internal IReadOnlyCollection<byte> Pattern {get; init;} = Array.Empty<byte>();
             internal int? Offset {get;init;}
         }
         private readonly ILogger<FilePatcher> _logger;
@@ -29,7 +30,7 @@ namespace HexPatch
                 .ToList();
         }
 
-        public async Task<FileInfo> RunPatch(string sourcePath, IEnumerable<PatchSet> sets, string? targetFilePath = null)
+        public async Task<FileInfo> RunPatch(string sourcePath, IEnumerable<FilePatchSet> sets, string? targetFilePath = null)
         {
             var fi = new FileInfo(sourcePath);
             var finalTarget = GetTarget(fi, targetFilePath);
@@ -119,7 +120,7 @@ namespace HexPatch
                     if (breakPattern != null && breakPattern.Pattern.Any() && current.SequenceEqual(breakPattern.Pattern)) {
                         break;
                     }
-                    if (breakPattern != null && breakPattern.Offset != null && skipFunc(i) == breakPattern.Offset) {
+                    if (breakPattern is { Offset: { } } && skipFunc(i) == breakPattern.Offset) {
                         break;
                     }
                     if (current.SequenceEqual(pattern))
@@ -163,7 +164,7 @@ namespace HexPatch
                 var final = matchPatterns.SelectMany(i => i).ToList();
                 return final;
             }
-            return new int[0];
+            return Array.Empty<int>();
         }
     }
 }
