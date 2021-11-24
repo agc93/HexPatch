@@ -2,15 +2,16 @@
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
+using ModEngine.Core;
 
-namespace HexPatch
+namespace HexPatch.Build
 {
-    public class Mod
+    public class Mod : ModEngine.Core.Mod
     {
-        [JsonPropertyName("_meta")] public SetMetadata? Metadata { get; set; } = new();
-        public Dictionary<string, List<PatchSet>> FilePatches { get; set; } = new();
+        // [JsonPropertyName("_meta")] public SetMetadata? Metadata { get; set; } = new();
+        public Dictionary<string, List<FilePatchSet>> FilePatches { get; set; } = new();
 
-        public string GetLabel(string defaultValue = "unknown mod")
+        public new string GetLabel(string defaultValue = "unknown mod")
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(this?.Metadata?.DisplayName)) {

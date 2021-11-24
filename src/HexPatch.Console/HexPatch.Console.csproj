@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="NJsonSchema" Version="10.3.3" />
     <PackageReference Include="Sharprompt" Version="2.1.0" />
   </ItemGroup>
 
