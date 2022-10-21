@@ -6,7 +6,9 @@ using System.Text;
 using System.Text.Json;
 using BuildEngine;
 using HexPatch.Build;
+using ModEngine.Core;
 using static System.Console;
+using Mod = HexPatch.Build.Mod;
 
 namespace HexPatch.Console
 {
@@ -16,35 +18,35 @@ namespace HexPatch.Console
         {
             var aoa = new FilePatchSet() {
                 Name = "AoA Unlocker",
-                Patches = new System.Collections.Generic.List<FilePatch> {
-                new FilePatch {
+                Patches = new System.Collections.Generic.List<Patch> {
+                new Patch {
                     Description = "Unlocks AoA",
-                    Substitution = "01",
+                    Value = "01",
                     Template = "004802"
                 }
             }};
             var unlock = new FilePatchSet {
                 Name = "Unlock all Planes",
-                Patches = new List<FilePatch> {
-                    new FilePatch {
+                Patches = new List<Patch> {
+                    new Patch {
                         Description = "All Planes available",
                         Template = "00 3E 02",
-                        Substitution = "01"
+                        Value = "01"
                     },
-                    new FilePatch {
+                    new Patch {
                         Description = "All planes unlocked",
                         Template = "00 D7 01",
-                        Substitution = "01"
+                        Value = "01"
                     }
                 }
             };
             var prez = new FilePatchSet {
                 Name = "Prez Everywhere",
-                Patches = new List<FilePatch> {
-                    new FilePatch {
+                Patches = new List<Patch> {
+                    new Patch {
                         Description = "Set Pilot count to 2",
                         Template = "00 00 00 1C 01",
-                        Substitution = "02"
+                        Value = "02"
                     }
                 }
             };

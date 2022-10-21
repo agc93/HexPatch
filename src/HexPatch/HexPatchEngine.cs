@@ -16,18 +16,19 @@ namespace HexPatch
             _filePatcher = filePatcher;
             _logger = logger;
         }
-        public async Task<IEnumerable<FileInfo>> RunPatch(string sourceKey, IEnumerable<PatchSet<Patch>> sets, string? targetName = null) {
+        public async Task<IEnumerable<FileInfo>> RunPatch(SourceFile sourceKey, IEnumerable<PatchSet<Patch>> sets, string? targetName = null) {
             var modified = new List<FileInfo>();
             var oldSets = new List<FilePatchSet>();
-            var origLength = new FileInfo(sourceKey).Length;
+            var input = sourceKey.File ?? new FileInfo(sourceKey.Key);
+            var origLength = input.Length;
             foreach (var patchSet in sets) {
-                var newPatches = new List<FilePatch>();
+                var newPatches = new List<Patch>();
                 foreach (var patch in patchSet.Patches) {
-                    newPatches.Add(new FilePatch {Description = patch.Description, Template = patch.Template, Type = patch.Type, Substitution = patch.Value});
+                    newPatches.Add(new Patch {Description = patch.Description, Template = patch.Template, Type = patch.Type, Value = patch.Value});
                 }
                 oldSets.Add(new FilePatchSet {Name = patchSet.Name, Patches = newPatches});
             }
-            var fi = await _filePatcher.RunPatch(sourceKey, oldSets, targetName);
+            var fi = await _filePatcher.RunPatch(input.FullName, oldSets, targetName);
             modified.Add(fi);
             var newSize = fi.Length;
             if (fi.Extension == ".uexp" && newSize != origLength) {
@@ -41,13 +42,13 @@ namespace HexPatch
                     var lPatch = new FilePatchSet()
                     {
                         Name = "Length auto-correct",
-                        Patches = new List<FilePatch>
+                        Patches = new List<Patch>
                         {
-                            new FilePatch
+                            new Patch
                             {
                                 Description = "uexp Length",
                                 Template = lengthBytes,
-                                Substitution = correctedBytes,
+                                Value = correctedBytes,
                                 Type = "inPlace"
                             }
                         }
@@ -69,7 +70,7 @@ namespace HexPatch
                     foreach (var patchSet in patchSets) {
                         var newPatches = new List<Patch>();
                         foreach (var patch in patchSet.Patches) {
-                            newPatches.Add(new Patch {Description = patch.Description, Template = patch.Template, Type = patch.Type, Value = patch.Substitution});
+                            newPatches.Add(new Patch {Description = patch.Description, Template = patch.Template, Type = patch.Type, Value = patch.Value});
                         }
                         tgtPatchSets.Add(new PatchSet<Patch> {Name = patchSet.Name, Patches = newPatches});
                     }

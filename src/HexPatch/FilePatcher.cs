@@ -48,7 +48,7 @@ namespace HexPatch
                             .Select(o => new ByteReplacement {
                                 MatchOffset = o,
                                 Key = p.Template.ToByteArray(),
-                                Replacement = p.Substitution.ToByteArray()
+                                Replacement = p.Value.ToByteArray()
                             }));
                     finalBytes = replacementType.ReplaceBytes(finalBytes, changes);
                 }

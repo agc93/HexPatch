@@ -9,7 +9,7 @@
     <PackageId>HexPatch</PackageId>
     <Description>HexPatch is an automation tool for applying arbitrary hex patches to binary files.</Description>
     <Authors>agc93</Authors>
-    <Copyright>© Alistair Chapman 2021</Copyright>
+    <Copyright>© Alistair Chapman 2022</Copyright>
     <PackageTags>hex;modding;</PackageTags>
     <RepositoryUrl>https://github.com/agc93/HexPatch</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-    <PackageReference Include="ModEngine.Core" Version="0.0.0-preview.0.1" />
+    <PackageReference Include="ModEngine.Core" Version="0.0.0-preview.0.6" />
 <!--    <ProjectReference Include="../../../ModEngine/src/ModEngine.Core/ModEngine.Core.csproj" />-->
   </ItemGroup>
 
