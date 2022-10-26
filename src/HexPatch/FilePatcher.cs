@@ -30,7 +30,36 @@ namespace HexPatch
                 .ToList();
         }
 
+        [Obsolete("Recommend using PatchSet<Patch> overload instead, this will be removed in a future release!", false)]
         public async Task<FileInfo> RunPatch(string sourcePath, IEnumerable<FilePatchSet> sets, string? targetFilePath = null)
+        {
+            var fi = new FileInfo(sourcePath);
+            var finalTarget = GetTarget(fi, targetFilePath);
+            var fileBytes = await File.ReadAllBytesAsync(fi.FullName);
+            foreach (var set in sets)
+            {
+                _logger?.LogInformation($"Running patches for '{set.Name}'");
+                _logger?.LogInformation($"Contains the following patches: {string.Join(", ", set.Patches.Select(p => p.Description))}");
+                var finalBytes = fileBytes;
+                foreach (var replacementType in _replacements) {
+                    var changes = set.Patches
+                        .Where(p => string.Equals(p.Type, replacementType.Name, StringComparison.InvariantCultureIgnoreCase))
+                        .SelectMany(p => PatternAt(fileBytes, p)
+                            .TakeTo(p.Window?.MaxMatches)
+                            .Select(o => new ByteReplacement {
+                                MatchOffset = o,
+                                Key = p.Template.ToByteArray(),
+                                Replacement = p.Value.ToByteArray()
+                            }));
+                    finalBytes = replacementType.ReplaceBytes(finalBytes, changes);
+                }
+                fileBytes = finalBytes;
+            }
+            await File.WriteAllBytesAsync(finalTarget, fileBytes);
+            return new FileInfo(finalTarget);
+        }
+        
+        public async Task<FileInfo> RunPatch(string sourcePath, IEnumerable<PatchSet<Patch>> sets, string? targetFilePath = null)
         {
             var fi = new FileInfo(sourcePath);
             var finalTarget = GetTarget(fi, targetFilePath);

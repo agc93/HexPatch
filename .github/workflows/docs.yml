@@ -1,0 +1,27 @@
+﻿name: Deploy Docs Site
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ./docs
+    steps:
+      - uses: actions/checkout@master
+        with:
+          submodules: recursive
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.402' # SDK Version to use.
+      - run: dotnet run -- pipelines
+      - run: dotnet run -- deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
