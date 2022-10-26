@@ -1,0 +1,7 @@
+﻿SourceFiles:
+  - "../../src/HexPatch/{!.git,!bin,!obj,!packages,!*.Tests,}/**/*.cs"
+  - "../../src/HexPatch.Build/{!.git,!bin,!obj,!packages,!*.Tests,}/**/*.cs"
+SiteTitle: HexPatch Documentation
+GitHubOwner: "agc93"
+GitHubName: "HexPatch"
+GitHubToken: "=> Config.FromSetting<string>(\"GITHUB_TOKEN\")"
