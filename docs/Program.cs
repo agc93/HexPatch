@@ -4,5 +4,9 @@ using Statiq.Docs;
 await Bootstrapper
     .Factory
     .CreateDocs(args)
-    // .AddSourceFiles("../../src/**/*.cs")
+    .DeployToGitHubPages(
+        "agc93",
+        "HexPatch",
+        Config.FromSetting<string>("GITHUB_TOKEN")
+    )
     .RunAsync();
