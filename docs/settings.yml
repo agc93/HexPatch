@@ -5,3 +5,4 @@ SiteTitle: HexPatch Documentation
 GitHubOwner: "agc93"
 GitHubName: "HexPatch"
 GitHubToken: "=> Config.FromSetting<string>(\"GITHUB_TOKEN\")"
+LinkRoot: "/HexPatch/"
